@@ -24,7 +24,7 @@ def get_product_price(request):
         # make sure date is in target format
         price_date = None
         try:
-            price_date = datetime.strptime(date_input, '%b %d %Y')
+            price_date = datetime.strptime(date_input, '%b %d %Y').date()
         except ValueError:
             return HttpResponseBadRequest('Date must be formatted e.g. Jun 01 2004')
 
@@ -46,11 +46,21 @@ def get_product_price(request):
 
         if gift_card_code:
             gift_card = get_object_or_404(GiftCard, code=gift_card_code)
-            adjusted_price = lowest_price.price - gift_card.amount
+            valid = True
+            if gift_card.date_end and gift_card.date_end < price_date:
+                valid = False
+            elif gift_card.date_start and gift_card.date_start > price_date:
+                valid = False
+            else:
+                adjusted_price = lowest_price.price - gift_card.amount
 
-            if adjusted_price < 0:
-                adjusted_price = 0
+                if adjusted_price < 0:
+                    adjusted_price = 0
 
-            response_payload['price'] = '${0:.2f}'.format(adjusted_price / 100)
+                response_payload['price'] = '${0:.2f}'.format(adjusted_price / 100)
+                response_payload['message'] = 'Gift card applied at that date'
+
+            if not valid:
+                response_payload['message'] = 'Gift card not applicable at that date'
 
         return JsonResponse(response_payload, status=200)
