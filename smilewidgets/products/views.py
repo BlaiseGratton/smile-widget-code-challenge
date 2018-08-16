@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404
 
 from .models import (
     GiftCard,
@@ -9,18 +10,11 @@ from .models import (
 )
 
 
-def bad_request(message, code):
-    return JsonResponse({'message': message}, status=code)
-
-
 def get_product_price(request):
     params = request.GET
 
     if 'productCode' not in params or 'date' not in params:
-        return bad_request(
-            message='Missing "productCode" or "date" query parameters',
-            code=422
-        )
+        return HttpResponseBadRequest('Missing "productCode" or "date" query parameters')
 
     else:
         product_code = params.get('productCode')
@@ -37,15 +31,7 @@ def get_product_price(request):
                 code=400
             )
 
-        # make sure product exists
-        product = None
-        try:
-            product = Product.objects.get(code=product_code)
-        except Product.DoesNotExist:
-            return bad_request(
-                message=f'Product with code {product_code} not found!',
-                code=404
-            )
+        product = get_object_or_404(Product, code=product_code)
 
         lowest_price = product.prices.filter(
                            date_start__lte=price_date,
@@ -57,20 +43,9 @@ def get_product_price(request):
             return bad_request(message='Price not set for that time!', code=404)
 
 
-        # check if gift card exists
-        gift_card = None
-
         if gift_card_code:
-            try:
-                gift_card = GiftCard.objects.get(code=gift_card_code)
-            except GiftCard.DoesNotExist:
-                return bad_request(
-                    message=f'Gift card with code {gift_card_code} not found!',
-                    code=404
-                )
+            gift_card = get_object_or_404(GiftCard, code=gift_card_code)
 
-        # make the response payload
-        if gift_card:
             adjusted_price = lowest_price.price - gift_card.amount
 
             if adjusted_price < 0:
