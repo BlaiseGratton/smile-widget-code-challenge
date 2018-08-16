@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseBadRequest, Http404, JsonResponse
 from django.shortcuts import get_object_or_404
 
 from .models import (
@@ -26,10 +26,7 @@ def get_product_price(request):
         try:
             price_date = datetime.strptime(date_input, '%b %d %Y')
         except ValueError:
-            return bad_request(
-                message='Date must be formatted e.g. Jun 01 2004',
-                code=400
-            )
+            return HttpResponseBadRequest('Date must be formatted e.g. Jun 01 2004')
 
         product = get_object_or_404(Product, code=product_code)
 
@@ -40,25 +37,20 @@ def get_product_price(request):
 
         # ensure a price exists for the requested date
         if not lowest_price:
-            return bad_request(message='Price not set for that time!', code=404)
+            raise Http404('Price not set for that time!')
 
+        response_payload = {
+            'product': product.name,
+            'price': lowest_price.formatted_amount
+        }
 
         if gift_card_code:
             gift_card = get_object_or_404(GiftCard, code=gift_card_code)
-
             adjusted_price = lowest_price.price - gift_card.amount
 
             if adjusted_price < 0:
                 adjusted_price = 0
 
-            response_payload = {
-                'product': product.name,
-                'price': '${0:.2f}'.format(adjusted_price / 100)
-            }
-        else:
-            response_payload = {
-                'product': product.name,
-                'price': lowest_price.formatted_amount
-            }
+            response_payload['price'] = '${0:.2f}'.format(adjusted_price / 100)
 
         return JsonResponse(response_payload, status=200)
