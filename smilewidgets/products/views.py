@@ -56,9 +56,34 @@ def get_product_price(request):
         if not lowest_price:
             return bad_request(message='Price not set for that time!', code=404)
 
-        response_payload = {
-            'product': product.name,
-            'price': lowest_price.formatted_amount
-        }
+
+        # check if gift card exists
+        gift_card = None
+
+        if gift_card_code:
+            try:
+                gift_card = GiftCard.objects.get(code=gift_card_code)
+            except GiftCard.DoesNotExist:
+                return bad_request(
+                    message=f'Gift card with code {gift_card_code} not found!',
+                    code=404
+                )
+
+        # make the response payload
+        if gift_card:
+            adjusted_price = lowest_price.price - gift_card.amount
+
+            if adjusted_price < 0:
+                adjusted_price = 0
+
+            response_payload = {
+                'product': product.name,
+                'price': '${0:.2f}'.format(adjusted_price / 100)
+            }
+        else:
+            response_payload = {
+                'product': product.name,
+                'price': lowest_price.formatted_amount
+            }
 
         return JsonResponse(response_payload, status=200)
