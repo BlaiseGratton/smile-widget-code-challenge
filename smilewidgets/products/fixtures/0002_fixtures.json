@@ -55,5 +55,60 @@
         "date_end": "2018-12-31",
         "product": 1
     }
+},
+{
+    "model": "products.productprice",
+    "pk": 2,
+    "fields": {
+        "price": 9900,
+        "description": "Small Widget Price in 2018",
+        "date_start": "2018-01-01",
+        "date_end": "2018-12-31",
+        "product": 2
+    }
+},
+{
+    "model": "products.productprice",
+    "pk": 3,
+    "fields": {
+        "price": 80000,
+        "description": "Big Widget Black Friday Price in 2018",
+        "date_start": "2018-11-23",
+        "date_end": "2018-11-25",
+        "product": 1
+    }
+},
+{
+    "model": "products.productprice",
+    "pk": 4,
+    "fields": {
+        "price": 0,
+        "description": "Small Widget Black Friday Price in 2018",
+        "date_start": "2018-11-23",
+        "date_end": "2018-11-25",
+        "product": 2
+    }
+},
+{
+    "model": "products.productprice",
+    "pk": 5,
+    "fields": {
+        "price": 120000,
+        "description": "Big Widget Price in 2019",
+        "date_start": "2019-01-01",
+        "date_end": "2019-12-31",
+        "product": 1
+    }
+},
+{
+    "model": "products.productprice",
+    "pk": 6,
+    "fields": {
+        "price": 12500,
+        "description": "Small Widget Price in 2019",
+        "date_start": "2019-01-01",
+        "date_end": "2019-12-31",
+        "product": 2
+    }
 }
 ]
